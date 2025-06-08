@@ -1,0 +1,145 @@
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(40px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Active navigation link */
+.nav-link.active {
+  color: #3b82f6; /* blue-500 */
+  font-weight: 600;
+}
+
+/* Hover effects */
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    text-align: center;
+  }
+  .hero-section img {
+    margin: 0 auto;
+  }
+}
+
+/* Logo animation */
+.logo-animate {
+  opacity: 0;
+  transform: translateX(-40px);
+  animation: logoIn 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.2s forwards;
+}
+
+@keyframes logoIn {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Scroll reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Floating animation */
+.floating {
+  animation: floating 3s ease-in-out infinite;
+}
+
+@keyframes floating {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Gradient background animation */
+@keyframes gradientBG {
+  0%,100% {background-position:0% 50%}
+  50% {background-position:100% 50%}
+}
+
+.animated-gradient {
+  background: linear-gradient(270deg, #f3e8ff, #f0f9ff, #fce7f3, #f3e8ff);
+  background-size: 600% 600%;
+  animation: gradientBG 12s ease infinite;
+}
+
+/* Micro Improvements */
+.nav-link {
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background-color: currentColor;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+.logo-animate {
+  transition: transform 0.3s ease;
+}
+
+.logo-animate:hover {
+  transform: scale(1.05) rotate(2deg);
+}
+
+.floating {
+  animation: floating 3s ease-in-out infinite;
+}
+
+@keyframes floating {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.hover-scale {
+  transition: transform 0.3s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Improved focus states */
+button:focus, a:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Better mobile menu transitions */
+@media (max-width: 768px) {
+  #mobile-menu {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  
+  #mobile-menu.hidden {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+} 
