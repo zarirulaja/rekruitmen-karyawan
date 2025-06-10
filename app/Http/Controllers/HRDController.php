@@ -426,15 +426,37 @@ class HRDController extends Controller
             // Log the validated data
             \Log::info('Validated interview data', $validated);
 
-            // Combine date and time
-            $jadwalWawancara = Carbon::parse($validated['interview_date'] . ' ' . $validated['interview_time']);
+            // Combine date and time and set timezone to match server time
+            $timezone = config('app.timezone', 'Asia/Jakarta');
+            $jadwalWawancara = Carbon::parse($validated['interview_date'] . ' ' . $validated['interview_time'], $timezone);
             
-            // Validate future date
-            if ($jadwalWawancara->isPast()) {
+            // Log the times for debugging
+            \Log::info('Interview scheduling times', [
+                'now' => now($timezone)->format('Y-m-d H:i:s'),
+                'scheduled' => $jadwalWawancara->format('Y-m-d H:i:s'),
+                'timezone' => $timezone
+            ]);
+            
+            // Validate that the schedule is not in the past (with 5-minute buffer to account for UI delay)
+            $now = now($timezone);
+            $bufferMinutes = 5; // 5-minute buffer for UI/network delays
+            
+            if ($jadwalWawancara->lessThan($now->copy()->subMinutes($bufferMinutes))) {
+                $errorMessage = 'Jadwal wawancara tidak boleh di masa lalu. Harap pilih waktu yang akan datang.';
                 if ($request->ajax()) {
-                    return response()->json(['success' => false, 'message' => 'Jadwal wawancara harus di masa depan.'], 400);
+                    return response()->json(['success' => false, 'message' => $errorMessage], 400);
                 }
-                return back()->with('error', 'Jadwal wawancara harus di masa depan.');
+                return back()->with('error', $errorMessage);
+            }
+            
+            // Check if the time is at least 30 minutes from now (reduced from 1 hour)
+            $minTime = $now->copy()->addMinutes(30);
+            if ($jadwalWawancara->lessThan($minTime)) {
+                $errorMessage = 'Jadwal wawancara harus minimal 30 menit dari sekarang.';
+                if ($request->ajax()) {
+                    return response()->json(['success' => false, 'message' => $errorMessage], 400);
+                }
+                return back()->with('error', $errorMessage);
             }
 
             // Format tanggal untuk database

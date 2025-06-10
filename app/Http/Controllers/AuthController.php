@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Pelamar;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Illuminate\Auth\Events\PasswordReset;
 
 class AuthController extends Controller
 {
@@ -58,6 +61,78 @@ class AuthController extends Controller
         return redirect('/');
     }
     
+    /**
+     * Show the application's forgot password form.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function showLinkRequestForm()
+    {
+        return view('auth.passwords.email');
+    }
+
+    /**
+     * Send a reset link to the given user.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function sendResetLinkEmail(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+
+        return $status === Password::RESET_LINK_SENT
+                    ? back()->with(['status' => __($status)])
+                    : back()->withErrors(['email' => __($status)]);
+    }
+
+    /**
+     * Display the password reset view for the given token.
+     *
+     * @param  string  $token
+     * @return \Illuminate\View\View
+     */
+    public function showResetForm($token)
+    {
+        return view('auth.passwords.reset', ['token' => $token]);
+    }
+
+    /**
+     * Reset the given user's password.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function reset(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|confirmed|min:8',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password)
+                ])->setRememberToken(Str::random(60));
+
+                $user->save();
+
+                event(new PasswordReset($user));
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+                    ? redirect()->route('login')->with('status', __($status))
+                    : back()->withErrors(['email' => [__($status)]]);
+    }
+    
     public function showRegistrationForm()
     {
         return view('signup');
@@ -72,15 +147,15 @@ class AuthController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'terms' => 'required',
         ], [
-            'terms.required' => 'Anda harus menyetujui syarat dan ketentuan.',
-            'name.required' => 'Nama lengkap wajib diisi.',
-            'email.required' => 'Email wajib diisi.',
-            'email.email' => 'Format email tidak valid.',
-            'email.unique' => 'Email sudah terdaftar.',
-            'phone.required' => 'Nomor telepon wajib diisi.',
-            'password.required' => 'Password wajib diisi.',
-            'password.min' => 'Password minimal 8 karakter.',
-            'password.confirmed' => 'Konfirmasi password tidak sesuai.',
+            'terms.required' => 'You must agree to the terms and conditions.',
+            'name.required' => 'Full name is required.',
+            'email.required' => 'Email is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.unique' => 'This email is already registered.',
+            'phone.required' => 'Phone number is required.',
+            'password.required' => 'Password is required.',
+            'password.min' => 'Password must be at least 8 characters.',
+            'password.confirmed' => 'Password confirmation does not match.',
         ]);
 
         if ($validator->fails()) {
@@ -101,20 +176,20 @@ class AuthController extends Controller
             ]);
             
             // Create initial pelamar profile with basic info
-            Pelamar::create([
-                'user_id' => $user->id,
-                'nama_lengkap' => $request->name,
-                'email' => $request->email,
-                'telepon' => $request->phone,
-                'alamat' => '',
-                'pendidikan_terakhir' => '',
-                'jurusan' => '',
-                'universitas' => '',
-                'tahun_lulus' => 0,
-                'cv_path' => '',
-                'pengalaman_kerja' => null,
-                'skill' => null,
-            ]);
+            $pelamar = new Pelamar();
+            $pelamar->user_id = $user->id;
+            $pelamar->nama_lengkap = $request->name; // Use the name from the form
+            $pelamar->email = $request->email;
+            $pelamar->telepon = $request->phone;
+            $pelamar->alamat = '';
+            $pelamar->pendidikan_terakhir = 'Tidak disebutkan';
+            $pelamar->pengalaman_kerja = 'Tidak ada';
+            $pelamar->jurusan = 'Tidak disebutkan';
+            $pelamar->universitas = 'Tidak disebutkan';
+            $pelamar->tahun_lulus = date('Y');
+            $pelamar->cv_path = '';
+            $pelamar->skill = 'Belum ada';
+            $pelamar->save();
             
             DB::commit();
             
