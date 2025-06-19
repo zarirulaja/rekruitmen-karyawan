@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reset Password</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    @vite('resources/css/app.css')
+    <link rel="stylesheet" href="https://rekruitmen-karyawan-production.up.railway.app/build/assets/app-29d60af5.css">
+    <script src="https://rekruitmen-karyawan-production.up.railway.app/build/assets/app-7efdc69a.js" defer></script>
     <style>
         body {
             background: linear-gradient(90deg, #120622 50%, #885175 50%);
