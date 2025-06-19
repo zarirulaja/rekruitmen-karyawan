@@ -110,13 +110,12 @@
                 @foreach($todayInterviews as $interview)
                     <div class="p-4 {{ \Carbon\Carbon::parse($interview->jadwal_wawancara)->isFuture() ? 'bg-purple-50 border border-purple-100' : 'bg-gray-50' }} rounded-lg">
                         <div class="flex items-center justify-between mb-2">
-                            <h3 class="font-medium text-gray-900">{{ $interview->pelamar->user->name }}</h3>
+                            <h3 class="font-medium text-gray-900">{{ $interview->pelamar->user->name ?? 'Nama tidak tersedia' }}</h3>
                             <span class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($interview->jadwal_wawancara)->format('H:i') }}</span>
                         </div>
-                        <p class="text-sm text-gray-600">{{ $interview->lowongan->posisi }}</p>
-                        <div class="mt-2 flex items-center space-x-4">
+                        <p class="text-sm text-gray-600">{{ $interview->lowongan->posisi ?? 'Posisi tidak tersedia' }}</p>
+                        <div class="mt-2">
                             <button class="text-purple-600 hover:text-purple-700 text-sm" onclick="showInterviewDetails({{ $interview->id }})">Detail</button>
-                            <a href="{{ route('reschedule.interview', $interview->id) }}" class="text-gray-600 hover:text-gray-700 text-sm">Reschedule</a>
                         </div>
                     </div>
                 @endforeach
@@ -129,12 +128,7 @@
 
         </div>
         
-        <!-- Add Interview Button -->
-        <a href="{{ route('hrd.pelamar', ['status' => 'review']) }}" class="block w-full mt-6 bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 text-center">
-            <span class="inline-flex items-center justify-center">
-                <span class="mr-1">+</span> Tambah Wawancara
-            </span>
-        </a>
+
     </div>
 </div>
 
@@ -166,10 +160,9 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Catatan</label>
-                    <p class="mt-1 text-sm text-gray-900" id="modal-catatan"></p>
+                    <p class="mt-1 text-sm text-gray-900 whitespace-pre-line" id="modal-catatan"></p>
                 </div>
-                <div class="flex justify-end space-x-3 mt-6">
-                    <a href="#" id="modal-reschedule-link" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-700">Reschedule</a>
+                <div class="flex justify-end mt-6">
                     <button onclick="closeInterviewModal()" class="px-4 py-2 text-sm text-white bg-purple-600 rounded-lg hover:bg-purple-700">Tutup</button>
                 </div>
             </div>
@@ -183,10 +176,10 @@
         @foreach($wawancara as $interview)
         {{ $interview->id }}: {
             id: {{ $interview->id }},
-            pelamar: "{{ $interview->pelamar->user->name }}",
-            posisi: "{{ $interview->lowongan->posisi }}",
+            pelamar: "{{ $interview->pelamar->user->name ?? 'Nama tidak tersedia' }}",
+            posisi: "{{ $interview->lowongan->posisi ?? 'Posisi tidak tersedia' }}",
             jadwal: "{{ \Carbon\Carbon::parse($interview->jadwal_wawancara)->format('d F Y, H:i') }} WIB",
-            lokasi: "{{ $interview->lokasi_wawancara ?? 'Belum ditentukan' }}",
+            lokasi: "{{ $interview->lokasi_wawancara ?? ($interview->catatan_hrd ?: 'Belum ditentukan') }}",
             interviewer: "{{ $interview->interviewer ?? 'Belum ditentukan' }}",
             catatan: "{{ $interview->catatan_wawancara ?? '-' }}"
         },
@@ -202,7 +195,6 @@
             document.getElementById('modal-lokasi').textContent = interview.lokasi;
             document.getElementById('modal-interviewer').textContent = interview.interviewer;
             document.getElementById('modal-catatan').textContent = interview.catatan;
-            document.getElementById('modal-reschedule-link').href = '{{ url('/hrd/wawancara') }}/' + interview.id + '/reschedule';
             document.getElementById('interviewModal').classList.remove('hidden');
         }
     }

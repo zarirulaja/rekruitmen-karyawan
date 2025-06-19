@@ -7,6 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
+    <!-- SweetAlert2 -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-gray-50">
     <div class="flex min-h-screen">
@@ -83,5 +86,99 @@
             @yield('content')
         </div>
     </div>
+
+    <!-- Flash Messages -->
+    @if(session('success'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Sukses!',
+                    text: '{{ session('success') }}',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            });
+        </script>
+    @endif
+
+    @if(session('error'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: '{{ session('error') }}',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 5000,
+                    timerProgressBar: true
+                });
+            });
+        </script>
+    @endif
+
+    <!-- Confirm Delete Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle delete confirmation
+            document.body.addEventListener('submit', function(e) {
+                if (e.target.matches('form[data-confirm-delete]')) {
+                    e.preventDefault();
+                    const form = e.target;
+                    
+                    Swal.fire({
+                        title: 'Apakah Anda yakin?',
+                        text: "Data yang dihapus tidak dapat dikembalikan!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#7E3AF2',
+                        cancelButtonColor: '#6B7280',
+                        confirmButtonText: 'Ya, hapus!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                }
+            });
+
+            // Handle status change confirmation if needed
+            const statusSelects = document.querySelectorAll('select[name="status"]');
+            statusSelects.forEach(select => {
+                select.addEventListener('change', function(e) {
+                    const form = this.form;
+                    const newStatus = this.value;
+                    const currentStatus = this.querySelector(`option[value="${this.value}"][selected]`) ? this.value : null;
+                    
+                    if (newStatus === 'ditolak' || currentStatus === 'diterima') {
+                        e.preventDefault();
+                        
+                        Swal.fire({
+                            title: 'Konfirmasi Perubahan Status',
+                            text: `Anda yakin ingin mengubah status menjadi ${this.options[this.selectedIndex].text}?`,
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonColor: '#7E3AF2',
+                            cancelButtonColor: '#6B7280',
+                            confirmButtonText: 'Ya, ubah status',
+                            cancelButtonText: 'Batal'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                form.submit();
+                            } else {
+                                this.value = currentStatus || '';
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
 </body>
-</html> 
+</html>

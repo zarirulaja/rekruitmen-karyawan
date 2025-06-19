@@ -72,7 +72,7 @@
                         <div class="flex items-center space-x-3">
                             <a href="{{ route('hrd.lowongan.edit', $job->id) }}" class="text-purple-600 hover:text-purple-700">Edit</a>
                             <a href="{{ route('hrd.lowongan.show', $job->id) }}" class="text-gray-600 hover:text-gray-700">Lihat</a>
-                            <form action="{{ route('hrd.lowongan.destroy', $job->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus lowongan ini?');">
+                            <form action="{{ route('hrd.lowongan.destroy', $job->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus lowongan ini?\n\nPERHATIAN: Semua lamaran yang terkait dengan lowongan ini juga akan dihapus secara permanen.');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:text-red-700">Hapus</button>

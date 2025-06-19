@@ -12,7 +12,7 @@ class CreateLamaranTable extends Migration
             $table->id();
             $table->unsignedBigInteger('pelamar_id');
             $table->unsignedBigInteger('lowongan_id');
-            $table->enum('status', ['pending', 'diterima', 'ditolak', 'wawancara'])->default('pending');
+            $table->enum('status', ['pending', 'review', 'diterima', 'ditolak', 'wawancara'])->default('pending');
             $table->text('catatan_hrd')->nullable();
             $table->text('catatan_wawancara')->nullable(); // Added missing column
             $table->string('interviewer')->nullable(); // Added missing column

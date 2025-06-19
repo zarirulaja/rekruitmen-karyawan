@@ -265,18 +265,15 @@ class HRDController extends Controller
     {
         $lowongan = Lowongan::findOrFail($id);
         
-        // Check if there are any applications
-        if ($lowongan->lamaran()->exists()) {
-            return redirect()
-                ->route('hrd.lowongan')
-                ->with('error', 'Tidak dapat menghapus lowongan yang sudah memiliki lamaran.');
-        }
-
+        // Delete related applications first
+        $lowongan->lamaran()->delete();
+        
+        // Then delete the job posting
         $lowongan->delete();
 
         return redirect()
             ->route('hrd.lowongan')
-            ->with('success', 'Lowongan berhasil dihapus!');
+            ->with('success', 'Lowongan dan semua lamarannya berhasil dihapus!');
     }
 
     public function pelamar(Request $request)
@@ -726,6 +723,12 @@ class HRDController extends Controller
 
     public function updateLamaranStatus(Request $request, $id)
     {
+        \Log::info('updateLamaranStatus called', [
+            'id' => $id,
+            'request_data' => $request->all(),
+            'method' => $request->method()
+        ]);
+
         try {
             $lamaran = Lamaran::with(['pelamar.user', 'lowongan'])->findOrFail($id);
             $oldStatus = $lamaran->status;
@@ -735,21 +738,24 @@ class HRDController extends Controller
             \Log::info('Attempting to update status', [
                 'id' => $id,
                 'old_status' => $oldStatus,
-                'new_status' => $newStatus
+                'new_status' => $newStatus,
+                'request_data' => $request->all()
             ]);
             
+            // Define valid statuses
+            $validStatuses = ['pending', 'review', 'wawancara', 'diterima', 'ditolak'];
+            
             // Validate the status value
-            if (!in_array($newStatus, Lamaran::$validStatuses)) {
+            if (!in_array($newStatus, $validStatuses)) {
                 throw new \Exception("Invalid status value: {$newStatus}");
             }
             
-            // If status changed to wawancara, redirect to interview scheduling page without saving status yet
+            // If status changed to wawancara, redirect to interview scheduling page
             if ($newStatus === 'wawancara') {
                 $today = now()->format('Y-m-d');
                 return redirect()
                     ->route('hrd.wawancara')
                     ->with([
-                        // Success message changed to reflect that user needs to schedule
                         'success' => 'Pelamar akan dijadwalkan untuk wawancara. Silakan pilih tanggal.',
                         'schedule_interview_id' => $lamaran->id,
                         'selected_date' => $today
@@ -760,44 +766,36 @@ class HRDController extends Controller
             $lamaran->status = $newStatus;
             
             // Save the model and check if it was successful
-            $saved = $lamaran->save();
-            
-            // Verify the status was actually updated
-            $updatedLamaran = Lamaran::find($id);
-            
-            \Log::info('Status update result', [
-                'save_result' => $saved,
-                'updated_status' => $updatedLamaran->status,
-                'status_changed' => $updatedLamaran->status === $newStatus
-            ]);
-            
-            if ($updatedLamaran->status === $newStatus) {
-                // Send notification to applicant (except for 'wawancara' which is handled in scheduleInterview)
-                $lamaran->pelamar->user->notify(new \App\Notifications\ApplicationStatusChanged($lamaran, $oldStatus));
+            if ($lamaran->save()) {
+                \Log::info('Status updated successfully', [
+                    'id' => $id,
+                    'old_status' => $oldStatus,
+                    'new_status' => $newStatus
+                ]);
+                
+                // Send notification to applicant if user exists
+                if ($lamaran->pelamar && $lamaran->pelamar->user) {
+                    try {
+                        $lamaran->pelamar->user->notify(new \App\Notifications\ApplicationStatusChanged($lamaran, $oldStatus));
+                    } catch (\Exception $e) {
+                        \Log::error('Error sending notification: ' . $e->getMessage());
+                        // Continue even if notification fails
+                    }
+                }
                 
                 return back()->with('success', 'Status lamaran berhasil diperbarui.');
             }
             
-            throw new \Exception("Status was not updated in the database for status: {$newStatus}");
+            throw new \Exception("Failed to save status update");
+            
         } catch (\Exception $e) {
-            // Check if the status was actually updated despite the exception
-            $updatedLamaran = Lamaran::find($id);
-            $newStatus = trim(strtolower($request->status));
-            
-            if ($updatedLamaran && $updatedLamaran->status === $newStatus && $newStatus !== 'wawancara') {
-                // Status was updated for non-wawancara statuses despite the exception, so return success
-                return back()->with('success', 'Status lamaran berhasil diperbarui (meskipun ada peringatan).');
-            }
-            // If it was 'wawancara' and somehow status got updated and an exception occurred, it's an anomaly.
-            // Or if a non-wawancara status failed to update.
-            
             \Log::error('Error in updateLamaranStatus', [
                 'id' => $id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
             
-            return back()->with('error', 'Terjadi kesalahan saat memperbarui status lamaran.');
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
