@@ -8,7 +8,7 @@
   <meta name="keywords" content="hiring, jobs, careers, tech jobs, developer jobs, web development careers">
   <meta property="og:title" content="Winni Code - We Are Hiring">
   <meta property="og:description" content="Join our dynamic team and grow your career with Winni Code">
-  <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
+  <link rel="icon" href="{{ asset('images/favicon.ico') }}?v={{ time() }}" type="image/x-icon">
   <link rel="stylesheet" href="https://rekruitmen-karyawan-production.up.railway.app/build/assets/app-29d60af5.css">
     <script src="https://rekruitmen-karyawan-production.up.railway.app/build/assets/app-7efdc69a.js" defer></script>
   <link rel="stylesheet" href="{{ asset('css/landing.css') }}">

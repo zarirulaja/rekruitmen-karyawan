@@ -6,7 +6,7 @@
     <title>@yield('title') - Winnicode</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" href="{{ asset('images/favicon.ico') }}?v={{ time() }}" type="image/x-icon">
 </head>
 <body class="bg-gray-50">
     <div class="flex min-h-screen">
